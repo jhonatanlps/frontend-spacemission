@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
-import { StyleSheet, Text, View, ScrollView, Button } from 'react-native';
+import { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, FlatList, Button, ActivityIndicator } from 'react-native';
 import { Alerta } from './src/interfaces/alerta';
 import { Sistemas } from './src/interfaces/sistemas';
 import { Sensor } from './src/interfaces/sensor';
@@ -10,10 +10,46 @@ import { StatusAlerta } from './src/types/statusAlerta';
 import { SistemasCard } from './src/components';
 import { AlertasCard } from './src/components';
 
+import { listarSistemas } from './src/services/sistemasService';
+import { listarAlertas } from './src/services/alertaService';
+
 export default function App() {
+
+  const [sistemas, setSistemas] = useState<Sistemas[]>([]);
+  const [alertas, setAlertas] = useState<Alerta[]>([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState<string | null>(null);
 
   const [mostrarSistemas, setMostrarSistemas] = useState(false);
   const [mostrarAlertas, setMostrarAlertas] = useState(false);
+
+
+  useEffect(() => {
+    carregarDados();
+  }, []);
+
+  async function carregarDados() {
+    try {
+      const sistemasData = await listarSistemas();
+      setCarregando(true);
+      setErro(null);
+
+      const [listagemSistemas, listagemAlertas] = await Promise.all([
+        listarSistemas(),
+        listarAlertas()
+      ]);
+
+      console.log("SISTEMAS:", listagemSistemas);
+
+      setSistemas(listagemSistemas);
+      setAlertas(listagemAlertas);
+    } catch (error) {
+      console.log("DETALHES DO ERRO:", error);
+      setErro("Erro ao carregar dados. Por favor, tente novamente.");
+    } finally {
+      setCarregando(false);
+    }
+  }
 
   const sensorTemperatura: Sensor = {
     id: 1,
@@ -94,12 +130,35 @@ export default function App() {
     <View style={styles.container}>
       <StatusBar style="light" />
       
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <FlatList 
+      contentContainerStyle={styles.scrollContent}
+      data={[]}
+      renderItem={null}
+      ListHeaderComponent={ <>
+
         {/* Cabeçalho */}
         <View style={styles.header}>
           <Text style={styles.titulo}>Space Mission</Text>
           <Text style={styles.subtitulo}>Monitoramento de Sistemas e Alertas da missão espacial</Text>
         </View>
+
+        {carregando && <ActivityIndicator size="large" color="#fff" />}
+
+        {erro && (
+          <View style={styles.mensagem}>
+            <Text style={styles.mensagemTexto}>{erro}</Text>
+          </View>
+        )}
+
+        {!carregando && !erro && (
+          sistemas.map((sistemas) => (
+            <View key={sistemas.id} style={styles.card}>
+              <Text style={styles.label}>{sistemas.nome}</Text>
+              <Text style={styles.valor}>{sistemas.descricao}</Text>
+              <Text style={styles.info}>Status: {sistemas.status ? "Ativo" : "Inativo"}</Text>  
+            </View>
+          ))
+        )}
 
         <View style={styles.card}>
           <Button title="Mostrar Sistemas" onPress={() => setMostrarSistemas(!mostrarSistemas)} />
@@ -114,8 +173,8 @@ export default function App() {
             <AlertasCard alerta={alertaTemperaturaAlta} reconhecerAlerta={reconhecerAlerta} resolverAlerta={resolverAlerta} />
           )}
         </View>
-
-      </ScrollView>
+      </>}
+      />
     </View>
   );
 }
