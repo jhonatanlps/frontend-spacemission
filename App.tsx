@@ -1,11 +1,160 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { StyleSheet, Text, View, ScrollView, Button } from 'react-native';
+import { Alerta } from './src/interfaces/alerta';
+import { Sistemas } from './src/interfaces/sistemas';
+import { Sensor } from './src/interfaces/sensor';
+import { SistemasSensor } from './src/interfaces/sistemasSensor';
+import { StatusAlerta } from './src/types/statusAlerta';
 
 export default function App() {
+
+  const sensorTemperatura: Sensor = {
+    id: 1,
+    nome: 'Sensor de Temperatura',
+    descricao: 'Mede a temperatura do ambiente'
+  };
+
+  const sensorUmidade: Sensor = {
+    id: 2,
+    nome: 'Sensor de Umidade',
+    descricao: 'Mede a umidade do ambiente'
+  };
+
+  const sensorPressao: Sensor = {
+    id: 3,
+    nome: 'Sensor de Pressão',
+    descricao: 'Mede a pressão atmosférica do ambiente'
+  };
+
+  const sistemaClimatizacao: Sistemas = {
+    id: 1,
+    nome: 'Sistema de Climatização',
+    descricao: 'Controla a temperatura e umidade do ambiente',
+    status: true,
+    sensores: []
+  };
+
+  const sistemaSensorClimatizacao: SistemasSensor = {
+    id: 1,
+    sensor: sensorTemperatura,
+    sistemas: sistemaClimatizacao,
+    valor: 22.5,
+    timestamp: new Date().toISOString()
+  };
+
+  const sistemaSensorUmidade: SistemasSensor = {
+    id: 2,
+    sensor: sensorUmidade,
+    sistemas: sistemaClimatizacao,
+    valor: 60.0,
+    timestamp: new Date().toISOString()
+  };
+
+  const sistemaSensorPressao: SistemasSensor = {
+    id: 3,
+    sensor: sensorPressao,
+    sistemas: sistemaClimatizacao,
+    valor: 1013.25,
+    timestamp: new Date().toISOString()
+  };
+
+  sistemaClimatizacao.sensores.push(sistemaSensorClimatizacao);
+  sistemaClimatizacao.sensores.push(sistemaSensorUmidade);
+  sistemaClimatizacao.sensores.push(sistemaSensorPressao);
+
+  const [alertaTemperaturaAlta, setAlertaTemperaturaAlta] = useState<Alerta>({
+    id: 1,
+    descricao: 'Temperatura alta detectada',
+    status: 'Ativo' as StatusAlerta,
+    sistema: sistemaClimatizacao
+  });
+
+  function reconhecerAlerta() {
+    setAlertaTemperaturaAlta(prevAlerta => ({
+      ...prevAlerta,
+      status: 'Reconhecido' as StatusAlerta
+    }));
+  }
+
+  function resolverAlerta() {
+    setAlertaTemperaturaAlta(prevAlerta => ({
+      ...prevAlerta,
+      status: 'Resolvido' as StatusAlerta
+    }));
+  }
+
+  function formatarData(timestamp: string): string {
+    const data = new Date(timestamp);
+    return data.toLocaleString();
+  }
+
   return (
     <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
+      <StatusBar style="light" />
+      
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Cabeçalho */}
+        <View style={styles.header}>
+          <Text style={styles.titulo}>Space Mission</Text>
+          <Text style={styles.subtitulo}>Sistema #{sistemaClimatizacao.id}</Text>
+        </View>
+
+        {/* Card da Consulta */}
+        <View style={styles.card}>
+          {/* Status Badge */}
+          <View style={[
+            styles.statusBadge,
+            alertaTemperaturaAlta.status === 'Reconhecido' && styles.statusConfirmada,
+            alertaTemperaturaAlta.status === 'Resolvido' && styles.statusCancelada,
+          ]}>
+            <Text style={styles.statusTexto}>{alertaTemperaturaAlta.status}</Text>
+          </View>
+
+          {/* Informações do Médico */}
+          <View style={styles.secao}>
+            <Text style={styles.label}>{alertaTemperaturaAlta.descricao}</Text>
+            <Text style={styles.valor}>{alertaTemperaturaAlta.sistema.nome}</Text>
+            <Text style={styles.info}>sensores: {alertaTemperaturaAlta.sistema.sensores.length}</Text>
+          </View>
+
+          {/* Informações do Paciente */}
+
+          {/* Informações da Consulta */}
+
+          {/* Botões de Ação */}
+          <View style={styles.acoes}>
+            {alertaTemperaturaAlta.status === "Ativo" && (
+              <>
+                <View style={styles.botaoContainer}>
+                  <Button
+                    title="Confirmar Consulta"
+                    onPress={reconhecerAlerta}
+                    color="#4CAF50"
+                  />
+                </View>
+              </>
+            )}
+            {alertaTemperaturaAlta.status === "Reconhecido" && (
+              <View style={styles.mensagem}>
+                <Text style={styles.mensagemTexto}>✓ Alerta reconhecido com sucesso!</Text>
+                <View style={styles.botaoContainer}>
+                  <Button
+                    title="Cancelar Consulta"
+                    onPress={resolverAlerta}
+                    color="#F44336"
+                  />
+                </View>
+              </View>
+            )}
+            {alertaTemperaturaAlta.status === "Resolvido" && (
+              <View style={styles.mensagemCancelada}>
+                <Text style={styles.mensagemTexto}>✗ Alerta resolvido</Text>
+              </View>
+            )}
+          </View>
+        </View>
+      </ScrollView>
     </View>
   );
 }
@@ -13,8 +162,120 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#79059C",
+  },
+  scrollContent: {
+    padding: 20,
+    paddingTop: 40,
+  },
+  header: {
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  titulo: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#fff",
+    marginBottom: 8,
+  },
+  subtitulo: {
+    fontSize: 18,
+    color: "#fff",
+    opacity: 0.9,
+  },
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  statusBadge: {
+    backgroundColor: "#FFA500",
+    alignSelf: "flex-start",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginBottom: 20,
+  },
+  statusConfirmada: {
+    backgroundColor: "#4CAF50",
+  },
+  statusCancelada: {
+    backgroundColor: "#F44336",
+  },
+  statusTexto: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 12,
+  },
+  secao: {
+    marginBottom: 20,
+    paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e0e0e0",
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#79059C",
+    marginBottom: 8,
+  },
+  valor: {
+    fontSize: 18,
+    color: "#333",
+    marginBottom: 4,
+  },
+  info: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 2,
+  },
+  observacoes: {
+    fontSize: 14,
+    color: "#555",
+    fontStyle: "italic",
+    marginTop: 8,
+  },
+  acoes: {
+    marginTop: 10,
+  },
+  botaoContainer: {
+    marginBottom: 12,
+  },
+  mensagem: {
+    backgroundColor: "#E8F5E9",
+    padding: 16,
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: "#4CAF50",
+  },
+  mensagemCancelada: {
+    backgroundColor: "#FFEBEE",
+    padding: 16,
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: "#F44336",
+  },
+  mensagemTexto: {
+    fontSize: 16,
+    color: "#333",
+    fontWeight: "600",
+    textAlign: "center",
+  },
+  rodape: {
+    marginTop: 24,
+    padding: 16,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    borderRadius: 12,
+  },
+  rodapeTexto: {
+    fontSize: 12,
+    color: "#fff",
+    textAlign: "center",
+    lineHeight: 18,
   },
 });

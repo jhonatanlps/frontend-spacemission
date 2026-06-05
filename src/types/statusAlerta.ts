@@ -1,0 +1,1 @@
+export type StatusAlerta = 'Ativo' | 'Reconhecido' | 'Resolvido';
