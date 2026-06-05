@@ -7,7 +7,13 @@ import { Sensor } from './src/interfaces/sensor';
 import { SistemasSensor } from './src/interfaces/sistemasSensor';
 import { StatusAlerta } from './src/types/statusAlerta';
 
+import { SistemasCard } from './src/components';
+import { AlertasCard } from './src/components';
+
 export default function App() {
+
+  const [mostrarSistemas, setMostrarSistemas] = useState(false);
+  const [mostrarAlertas, setMostrarAlertas] = useState(false);
 
   const sensorTemperatura: Sensor = {
     id: 1,
@@ -84,11 +90,6 @@ export default function App() {
     }));
   }
 
-  function formatarData(timestamp: string): string {
-    const data = new Date(timestamp);
-    return data.toLocaleString();
-  }
-
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
@@ -97,63 +98,23 @@ export default function App() {
         {/* Cabeçalho */}
         <View style={styles.header}>
           <Text style={styles.titulo}>Space Mission</Text>
-          <Text style={styles.subtitulo}>Sistema #{sistemaClimatizacao.id}</Text>
+          <Text style={styles.subtitulo}>Monitoramento de Sistemas e Alertas da missão espacial</Text>
         </View>
 
-        {/* Card da Consulta */}
         <View style={styles.card}>
-          {/* Status Badge */}
-          <View style={[
-            styles.statusBadge,
-            alertaTemperaturaAlta.status === 'Reconhecido' && styles.statusConfirmada,
-            alertaTemperaturaAlta.status === 'Resolvido' && styles.statusCancelada,
-          ]}>
-            <Text style={styles.statusTexto}>{alertaTemperaturaAlta.status}</Text>
-          </View>
-
-          {/* Informações do Médico */}
-          <View style={styles.secao}>
-            <Text style={styles.label}>{alertaTemperaturaAlta.descricao}</Text>
-            <Text style={styles.valor}>{alertaTemperaturaAlta.sistema.nome}</Text>
-            <Text style={styles.info}>sensores: {alertaTemperaturaAlta.sistema.sensores.length}</Text>
-          </View>
-
-          {/* Informações do Paciente */}
-
-          {/* Informações da Consulta */}
-
-          {/* Botões de Ação */}
-          <View style={styles.acoes}>
-            {alertaTemperaturaAlta.status === "Ativo" && (
-              <>
-                <View style={styles.botaoContainer}>
-                  <Button
-                    title="Confirmar Consulta"
-                    onPress={reconhecerAlerta}
-                    color="#4CAF50"
-                  />
-                </View>
-              </>
-            )}
-            {alertaTemperaturaAlta.status === "Reconhecido" && (
-              <View style={styles.mensagem}>
-                <Text style={styles.mensagemTexto}>✓ Alerta reconhecido com sucesso!</Text>
-                <View style={styles.botaoContainer}>
-                  <Button
-                    title="Cancelar Consulta"
-                    onPress={resolverAlerta}
-                    color="#F44336"
-                  />
-                </View>
-              </View>
-            )}
-            {alertaTemperaturaAlta.status === "Resolvido" && (
-              <View style={styles.mensagemCancelada}>
-                <Text style={styles.mensagemTexto}>✗ Alerta resolvido</Text>
-              </View>
-            )}
-          </View>
+          <Button title="Mostrar Sistemas" onPress={() => setMostrarSistemas(!mostrarSistemas)} />
+          {mostrarSistemas && (
+            <SistemasCard sistema={sistemaClimatizacao} sensores={sistemaClimatizacao.sensores} />
+          )}
         </View>
+
+        <View style={styles.card}>
+          <Button title="Mostrar Alertas" onPress={() => setMostrarAlertas(!mostrarAlertas)} />
+          {mostrarAlertas && (
+            <AlertasCard alerta={alertaTemperaturaAlta} reconhecerAlerta={reconhecerAlerta} resolverAlerta={resolverAlerta} />
+          )}
+        </View>
+
       </ScrollView>
     </View>
   );
