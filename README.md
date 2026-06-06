@@ -1,9 +1,9 @@
 SpaceMission — Frontend
 
 Integrantes:
-Bruno Takaya — RM: 554986
-Iury Cardoso — RM: 558050
-Jhonatan Lopes — RM: 559174 
+- Bruno Takaya — RM: 554986
+- Iury Cardoso — RM: 558050
+- Jhonatan Lopes — RM: 559174 
 
 Aplicativo frontend em React Native / Expo para visualizar e gerir sistemas, sensores e alertas da missão SpaceMission.
 
