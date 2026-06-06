@@ -1,181 +1,32 @@
-import { StatusBar } from 'expo-status-bar';
-import { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, FlatList, Button, ActivityIndicator } from 'react-native';
-import { Alerta } from './src/interfaces/alerta';
-import { Sistemas } from './src/interfaces/sistemas';
-import { Sensor } from './src/interfaces/sensor';
-import { SistemasSensor } from './src/interfaces/sistemasSensor';
-import { StatusAlerta } from './src/types/statusAlerta';
+import { StyleSheet} from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-import { SistemasCard } from './src/components';
-import { AlertasCard } from './src/components';
+import HomeScreen from './src/screens/HomeScreen';
+import MostrarSistemasScreen from './src/screens/MostrarSistemasScreen';
+import MostrarAlertasScreen from './src/screens/MostrarAlertasScreen';
+import CriarSistemaScreen from './src/screens/CriarSistemasScreen';
 
-import { listarSistemas } from './src/services/sistemasService';
-import { listarAlertas } from './src/services/alertaService';
+// 1. O tipo global precisa estar idêntico aqui
+export type RootStackParamList = {
+  Home: undefined;
+  CriarSistemas: undefined;
+  MostrarSistemas: undefined;
+  MostrarAlertas: undefined;
+};
+
+const Stack = createNativeStackNavigator<RootStackParamList>(); // 👈 2. Passe o tipo aqui dentro
 
 export default function App() {
-
-  const [sistemas, setSistemas] = useState<Sistemas[]>([]);
-  const [alertas, setAlertas] = useState<Alerta[]>([]);
-  const [carregando, setCarregando] = useState(true);
-  const [erro, setErro] = useState<string | null>(null);
-
-  const [mostrarSistemas, setMostrarSistemas] = useState(false);
-  const [mostrarAlertas, setMostrarAlertas] = useState(false);
-
-
-  useEffect(() => {
-    carregarDados();
-  }, []);
-
-  async function carregarDados() {
-    try {
-      const sistemasData = await listarSistemas();
-      setCarregando(true);
-      setErro(null);
-
-      const [listagemSistemas, listagemAlertas] = await Promise.all([
-        listarSistemas(),
-        listarAlertas()
-      ]);
-
-      console.log("SISTEMAS:", listagemSistemas);
-
-      setSistemas(listagemSistemas);
-      setAlertas(listagemAlertas);
-    } catch (error) {
-      console.log("DETALHES DO ERRO:", error);
-      setErro("Erro ao carregar dados. Por favor, tente novamente.");
-    } finally {
-      setCarregando(false);
-    }
-  }
-
-  const sensorTemperatura: Sensor = {
-    id: 1,
-    nome: 'Sensor de Temperatura',
-    descricao: 'Mede a temperatura do ambiente'
-  };
-
-  const sensorUmidade: Sensor = {
-    id: 2,
-    nome: 'Sensor de Umidade',
-    descricao: 'Mede a umidade do ambiente'
-  };
-
-  const sensorPressao: Sensor = {
-    id: 3,
-    nome: 'Sensor de Pressão',
-    descricao: 'Mede a pressão atmosférica do ambiente'
-  };
-
-  const sistemaClimatizacao: Sistemas = {
-    id: 1,
-    nome: 'Sistema de Climatização',
-    descricao: 'Controla a temperatura e umidade do ambiente',
-    status: true,
-    sensores: []
-  };
-
-  const sistemaSensorClimatizacao: SistemasSensor = {
-    id: 1,
-    sensor: sensorTemperatura,
-    sistemas: sistemaClimatizacao,
-    valor: 22.5,
-    timestamp: new Date().toISOString()
-  };
-
-  const sistemaSensorUmidade: SistemasSensor = {
-    id: 2,
-    sensor: sensorUmidade,
-    sistemas: sistemaClimatizacao,
-    valor: 60.0,
-    timestamp: new Date().toISOString()
-  };
-
-  const sistemaSensorPressao: SistemasSensor = {
-    id: 3,
-    sensor: sensorPressao,
-    sistemas: sistemaClimatizacao,
-    valor: 1013.25,
-    timestamp: new Date().toISOString()
-  };
-
-  sistemaClimatizacao.sensores.push(sistemaSensorClimatizacao);
-  sistemaClimatizacao.sensores.push(sistemaSensorUmidade);
-  sistemaClimatizacao.sensores.push(sistemaSensorPressao);
-
-  const [alertaTemperaturaAlta, setAlertaTemperaturaAlta] = useState<Alerta>({
-    id: 1,
-    descricao: 'Temperatura alta detectada',
-    status: 'Ativo' as StatusAlerta,
-    sistema: sistemaClimatizacao
-  });
-
-  function reconhecerAlerta() {
-    setAlertaTemperaturaAlta(prevAlerta => ({
-      ...prevAlerta,
-      status: 'Reconhecido' as StatusAlerta
-    }));
-  }
-
-  function resolverAlerta() {
-    setAlertaTemperaturaAlta(prevAlerta => ({
-      ...prevAlerta,
-      status: 'Resolvido' as StatusAlerta
-    }));
-  }
-
   return (
-    <View style={styles.container}>
-      <StatusBar style="light" />
-      
-      <FlatList 
-      contentContainerStyle={styles.scrollContent}
-      data={[]}
-      renderItem={null}
-      ListHeaderComponent={ <>
-
-        {/* Cabeçalho */}
-        <View style={styles.header}>
-          <Text style={styles.titulo}>Space Mission</Text>
-          <Text style={styles.subtitulo}>Monitoramento de Sistemas e Alertas da missão espacial</Text>
-        </View>
-
-        {carregando && <ActivityIndicator size="large" color="#fff" />}
-
-        {erro && (
-          <View style={styles.mensagem}>
-            <Text style={styles.mensagemTexto}>{erro}</Text>
-          </View>
-        )}
-
-        {!carregando && !erro && (
-          sistemas.map((sistemas) => (
-            <View key={sistemas.id} style={styles.card}>
-              <Text style={styles.label}>{sistemas.nome}</Text>
-              <Text style={styles.valor}>{sistemas.descricao}</Text>
-              <Text style={styles.info}>Status: {sistemas.status ? "Ativo" : "Inativo"}</Text>  
-            </View>
-          ))
-        )}
-
-        <View style={styles.card}>
-          <Button title="Mostrar Sistemas" onPress={() => setMostrarSistemas(!mostrarSistemas)} />
-          {mostrarSistemas && (
-            <SistemasCard sistema={sistemaClimatizacao} sensores={sistemaClimatizacao.sensores} />
-          )}
-        </View>
-
-        <View style={styles.card}>
-          <Button title="Mostrar Alertas" onPress={() => setMostrarAlertas(!mostrarAlertas)} />
-          {mostrarAlertas && (
-            <AlertasCard alerta={alertaTemperaturaAlta} reconhecerAlerta={reconhecerAlerta} resolverAlerta={resolverAlerta} />
-          )}
-        </View>
-      </>}
-      />
-    </View>
+    <NavigationContainer>
+      <Stack.Navigator initialRouteName="Home">
+        <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="CriarSistemas" component={CriarSistemaScreen} />
+        <Stack.Screen name='MostrarSistemas' component={MostrarSistemasScreen} />
+        <Stack.Screen name='MostrarAlertas' component={MostrarAlertasScreen} />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
 

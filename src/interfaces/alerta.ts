@@ -5,5 +5,5 @@ export interface Alerta {
     id: number;
     descricao: string;
     status: StatusAlerta;
-    sistema: Sistemas;   
+    sistemas: Sistemas;   
 }
